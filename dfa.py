@@ -35,8 +35,8 @@ import time
 from glob import glob
 from os.path import basename, join, exists
 
-clf = joblib.load('model_classifier_positive_negative.pkl') 
-X_, y_multiclass = readAllAudioData(clf)
+#clf = joblib.load('model_classifier_positive_negative.pkl') 
+X_, y_multiclass = readAllAudioData()
 
 acc_vals	= []
 
