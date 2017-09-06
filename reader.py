@@ -103,27 +103,26 @@ def parseData():
     return X_,y_
 
 
-def readAllAudioData(clf):
+def readAllAudioData():
     count=0
-    for idx, val in enumerate(os.listdir(allDataPath)):
+    X_images={}
+    for idx, val in enumerate(os.listdir(baseDataset)):
         if idx > 0:
             if not val in classesNames.keys():
                 classesNames[val] = count
                 count+=1
 
-            for idx_, audio_folder in enumerate(os.listdir(allDataPath + val)):
-                if idx_ > 0 and os.path.isdir(allDataPath + val + '/'+ audio_folder):
-                    for marker, audio in enumerate(os.listdir(allDataPath + val + '/' + audio_folder)):
-                        if marker > 0 and os.path.isfile(baseDataset + val+'/'+audio_folder+'/Spec/Crop/c'+audio.replace('WAV','png')):
-                            #img_ = cv2.imread(baseDataset + val+'/'+audio_folder+'/Spec/Crop/c'+audio.replace('WAV','png'))
-                            #img_ = img2array(img_)
-
-                            #pred = clf.predict(img_)
-                            #if pred == [1]:
-                            if not classesNames[val] in X.keys():
-                                X[classesNames[val]] = baseDataset + val+'/'+audio_folder+'/'+audio.replace('png','WAV')
-                            else:
-                                X[classesNames[val]] = X[classesNames[val]] + ',' + baseDataset + val+'/'+audio_folder+'/'+audio.replace('png','WAV')
+            for idx_, audio_folder in enumerate(os.listdir(baseDataset + val)):
+                if idx_ > 0 and os.path.isdir(baseDataset + val + '/'+ audio_folder):
+                    for marker, audio in enumerate(os.listdir(baseDataset + val + '/' + audio_folder)):
+                        if marker > 0 and audio.endswith('WAV'):
+                            if os.path.isfile(baseDataset + val+'/'+audio_folder+'/'+audio) and os.path.isfile(baseDataset + val+'/'+audio_folder+'/Spec/Crop/c'+audio.replace('WAV','png')):
+                                if not classesNames[val] in X.keys():
+                                    X[classesNames[val]] = baseDataset + val+'/'+audio_folder+'/'+audio
+                                    X_images[classesNames[val]] = baseDataset + val+'/'+audio_folder+'/Spec/Crop/c'+audio.replace('WAV','png')
+                                else:
+                                    X[classesNames[val]] = X[classesNames[val]] + ',' + baseDataset + val+'/'+audio_folder+'/'+audio
+                                    X_images[classesNames[val]] = X_images[classesNames[val]] + ',' + baseDataset + val+'/'+audio_folder+'/Spec/Crop/c'+audio.replace('WAV','png')
         
     X_=[]
     y_=[]
@@ -133,48 +132,43 @@ def readAllAudioData(clf):
     for classVal in range(len(classesNames)):
         if classVal in X.keys():
             arquivos = X[classVal].split(',')
+            arquivos_images = X_images[classVal].split(',')
             
             if classVal in indexClass:
                 print("accepting : ", classVal)
-                for val in arquivos:
+                for idx,val in enumerate(arquivos):
+                    img_ = cv2.imread(arquivos_images[idx])
+                    img_ = img2array(img_)
+
+                    #pred = clf.predict(img_)
+                    #if pred == [1]:
                     X_.append(featureExtractor(val))
                     y_.append(realClass)
                 realClass+=1
     
     X_      = np.array(X_)
     y_      = np.array(y_)
-    print(len(X_))
 
     return X_,y_
 
-                        
 
-def readAllData(clf):
+def readAllData():
     count=0
-    for idx, val in enumerate(os.listdir(baseDataset)):
+    for idx, val in enumerate(os.listdir(allDataPath)):
         if idx > 0:
             if not val in classesNames.keys():
                 classesNames[val] = count
                 count+=1
 
-            for idx_, img_folder in enumerate(os.listdir(baseDataset + val)):
-                if idx_ > 0 and os.path.isdir(baseDataset + val + '/'+ img_folder):
-                    for marker, img in enumerate(os.listdir(baseDataset + val + '/' + img_folder)):
-                        if marker > 0 and os.path.isfile(baseDataset + val+'/'+img_folder+'/Spec/Crop/c'+img.replace('WAV','png')):
-                            img_real = cv2.imread(baseDataset + val+'/'+img_folder+'/Spec/Crop/c'+img.replace('WAV','png'))
-                            img_ = img2array(img_real)
-
-                            pred = clf.predict(img_)
-                            if pred == 1:
-                                while(1):
-                                    cv2.imshow('img',img_real)
-                                    k = cv2.waitKey(33)
-                                    if  k == ord('q'):
-                                        break
+            for idx_, img_folder in enumerate(os.listdir(allDataPath + val)):
+                if idx_ > 0:
+                    for marker, img in enumerate(os.listdir(allDataPath + val + '/' + img_folder)):
+                        if marker > 0 and img.endswith('png'):
+                            if os.path.isfile(baseDataset + val+'/'+img_folder+'/Spec/Crop/c'+img):
                                 if not classesNames[val] in X.keys():
-                                    X[classesNames[val]] = baseDataset + val+'/'+img_folder+'/Spec/Crop/c'+img.replace('WAV','png')
+                                    X[classesNames[val]] = baseDataset + val+'/'+img_folder+'/Spec/Crop/c'+img
                                 else:
-                                    X[classesNames[val]] = X[classesNames[val]] + ',' + baseDataset + val+'/'+img_folder+'/Spec/Crop/c'+img.replace('WAV','png')
+                                    X[classesNames[val]] = X[classesNames[val]] + ',' + baseDataset + val+'/'+img_folder+'/Spec/Crop/c'+img
                             
                         
     X_=[]
@@ -185,12 +179,14 @@ def readAllData(clf):
         if classVal in X.keys():
             arquivos = X[classVal].split(',')
             
-            if classVal in indexClass:
+            if len(arquivos) > 50:
                 print("accepting : ", classVal)
                 for val in arquivos:
                     img_ = cv2.imread(val)
                     img_ = img2array(img_)
 
+                    #pred = clf.predict(img_)
+                    #if pred == [1]:
                     img_ = img_.astype('float32')
                     X_.append(img_)
                     y_.append(realClass)
@@ -198,7 +194,8 @@ def readAllData(clf):
 
     X_      = np.array(X_)
     y_      = np.array(y_)
-    print(len(X_))
 
     return X_,y_
+
+
 

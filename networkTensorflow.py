@@ -20,8 +20,8 @@ best_classifier=None
 mean_metrics = []
 
 #X_, y_ = parseData()
-clf = joblib.load('modelo_pickle_binario/model_binary_2.pkl') 
-X_, y_ = readAllData(clf)
+#clf = joblib.load('model_classifier_positive_negative.pkl') 
+X_, y_ = readAllData()
 
 def dense_to_one_hot(labels_dense, num_classes=9):
     """Convert class labels from scalars to one-hot vectors"""

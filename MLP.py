@@ -16,7 +16,7 @@ import time
 seed = 128
 rng = np.random.RandomState(seed)
 
-clf = joblib.load('modelo_pickle_binario/model_binary_2.pkl') 
+clf = joblib.load('model_classifier_positive_negative.pkl') 
 X_, y_ = readAllData(clf)
 
 def dense_to_one_hot(labels_dense, num_classes=9):

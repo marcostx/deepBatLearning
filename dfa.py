@@ -35,15 +35,13 @@ import time
 from glob import glob
 from os.path import basename, join, exists
 
-clf = joblib.load('modelo_pickle_binario/model_binary_2.pkl') 
+clf = joblib.load('model_classifier_positive_negative.pkl') 
 X_, y_multiclass = readAllAudioData(clf)
+
 acc_vals	= []
 
-
-acc = []
-pre = []
-rec = []
-f1 = []
+#X_ = np.array(X_)
+#y_multiclass = np.array(y_multiclass)
 
 skf = StratifiedKFold(n_splits=10, shuffle=True)
 print("Training")
@@ -65,15 +63,6 @@ for train_index, test_index in skf.split(X_, y_multiclass):
 	print("recall : ", recall_score(y_test, pred,average='weighted' ) )
 	print("f1 : ", f1_score(y_test, pred,average='weighted' ) )
 	print("\n")
-	acc.append(accuracy_score(y_test, pred ))
-	pre.append(precision_score(y_test, pred, average='weighted' ))
-	rec.append(recall_score(y_test, pred,average='weighted' ))
-	f1.append(f1_score(y_test, pred,average='weighted' ))
 
 print("Done.")
 print("it took", time.time() - start, "seconds.")
-
-print("mean : %f, std : %f ", np.mean(acc), np.std(acc))
-print("mean : %f, std : %f ", np.mean(pre), np.std(pre))
-print("mean : %f, std : %f ", np.mean(rec), np.std(rec))
-print("mean : %f, std : %f ", np.mean(f1), np.std(f1))
