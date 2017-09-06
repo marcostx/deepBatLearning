@@ -38,16 +38,16 @@ def mainPipeline(inp):
 	mean_predictions= None
 
 	# load model
-	clf = joblib.load('model_classifier_positive_negative.pkl') 
+	#clf = joblib.load('model_classifier_positive_negative.pkl') 
 
 	# classificar iamgens em positivas e negativas , pegar apenas as positivas para classificacao
 	for fname in sorted(os.listdir(maindir)):
 		image = cv2.imread(maindir + fname)
 		image = img2array(image)
 
-		pred = clf.predict(image)
-		if pred == [1]:
-			positiveImages.append(image.astype('float32'))
+		#pred = clf.predict(image)
+		#if pred == [1]:
+		positiveImages.append(image.astype('float32'))
 
 	positiveImages = np.array(positiveImages)
 	# carregar modelo tensorflow
