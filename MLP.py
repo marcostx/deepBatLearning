@@ -3,14 +3,14 @@ from sklearn.model_selection import StratifiedKFold
 import tensorflow as tf
 from random import shuffle
 import numpy as np
-from reader import readAllData
+from reader import parseData
 import time
 
 seed = 128
 rng = np.random.RandomState(seed)
 
 #clf = joblib.load('model_classifier_positive_negative.pkl') 
-X_, y_ = readAllData()
+X_, y_= parseData(isImage=True)
 
 def dense_to_one_hot(labels_dense, num_classes=9):
     """Convert class labels from scalars to one-hot vectors"""
