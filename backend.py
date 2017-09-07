@@ -15,10 +15,14 @@ warnings.filterwarnings("ignore") #TODO corrigir future warning
 def interesting_points_finder(filestring, freq_min, freq_max, pot_min):
 
    nomewav = os.path.basename(filestring)
+   pathwav = os.path.dirname(filestring)
    filename = os.path.splitext(nomewav)[0]
    
-   if not os.path.exists("temp/"+filename+"/"):
-	   os.makedirs("temp/"+filename+"/")
+   if not os.path.exists(pathwav+"/"+filename+"/"):
+     os.makedirs(pathwav+"/"+filename+"/")
+   if os.path.exists(pathwav+"/"+filename+"/Spec"):
+     print("skipped")
+     return
    
    win = wave.open(filestring, 'r')
 
@@ -74,7 +78,7 @@ def interesting_points_finder(filestring, freq_min, freq_max, pot_min):
 
    win.close() 
 
-   timestampsfile = open("temp/"+filename+"/"+filename+'Timestamps.txt','w')
+   timestampsfile = open(pathwav+"/"+filename+"/"+filename+'Timestamps.txt','w')
    timestampsfile.write(str(timeStamps)) 
    timestampsfile.close()
    
@@ -86,9 +90,13 @@ def time_stamps_cropper(filestring):
 
    if (filestring.find('wav') > 0 or filestring.find('WAV') > 0):
       nomewav = os.path.basename(filestring)
+      pathwav = os.path.dirname(filestring)
       filename = os.path.splitext(nomewav)[0]
+      if os.path.exists(pathwav+"/"+filename+"/Spec"):
+        print("skipped")
+        return
 
-      fname = open('temp/'+filename+'/'+filename+'Timestamps.txt').read().split(', ')
+      fname = open(pathwav+'/'+filename+'/'+filename+'Timestamps.txt').read().split(', ')
       fname[0] = fname[0].translate(None, '[')
       fname[len(fname)-1] = fname[len(fname)-1].translate(None, ']\n')
       timestamps = []
@@ -115,7 +123,7 @@ def time_stamps_cropper(filestring):
       for i in range(0, len(timestamps)):
          #print timestamps[i]
          win = wave.open(filestring, 'rb')
-         wout = wave.open("temp/"+filename+"/"+filename+"I"+str(i)+".WAV", 'wb')
+         wout = wave.open(pathwav+"/"+filename+"/"+filename+"I"+str(i)+".WAV", 'wb')
          timelapse = timestamps[i] - 0.003
          if timelapse > 0.0:
             win.readframes(int(timelapse * win.getframerate()))
@@ -135,9 +143,13 @@ def raw_specs(filestring):
 
    if (filestring.find('wav') > 0 or filestring.find('WAV') > 0):
       nomewav = os.path.basename(filestring)
+      pathwav = os.path.dirname(filestring)
       filename = os.path.splitext(nomewav)[0]
 
-      maindir = "temp/"+filename+"/"
+      maindir = pathwav+"/"+filename+"/"
+      if os.path.exists(maindir+"Spec"):
+        print("skipped")
+        return
       for fnamefiles in os.listdir(maindir):
          if os.path.isdir(maindir + fnamefiles) or os.stat(maindir+fnamefiles).st_size == 0:
                print "not a file."
@@ -169,9 +181,12 @@ def crop_specs(filestring):
 
    
    nomewav = os.path.basename(filestring)
+   pathwav = os.path.dirname(filestring)
    filename = os.path.splitext(nomewav)[0]
 
-   maindir = "temp/"+filename+"/Spec/"
+   maindir = pathwav+"/"+filename+"/Spec/"
+   if not os.path.exists(maindir):
+     return
 
    for fname in sorted(os.listdir(maindir)):
        if fname.find('png') > 0 and fname[0] != 'c':
