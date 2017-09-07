@@ -1,16 +1,9 @@
 from sklearn.metrics import accuracy_score, f1_score, recall_score, precision_score
 from sklearn.model_selection import StratifiedKFold
-from sklearn.model_selection import train_test_split
-from scipy.misc import imread
 import tensorflow as tf
-import pandas as pd
 from random import shuffle
-import pylab
 import numpy as np
-import os
-import cv2
-from reader import parseData, readAllData
-from sklearn.externals import joblib
+from reader import readAllData
 
 
 seed = 128

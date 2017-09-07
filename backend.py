@@ -1,6 +1,6 @@
 
 
-import warnings #TODO corrigir future warning
+import warnings
 import wave
 import sys
 import os
@@ -10,7 +10,7 @@ import math
 import matplotlib
 import matplotlib.pyplot as plt
 import scipy.io.wavfile as wavfile
-warnings.filterwarnings("ignore") #TODO corrigir future warning
+warnings.filterwarnings("ignore")
 
 def interesting_points_finder(filestring, freq_min, freq_max, pot_min):
 
