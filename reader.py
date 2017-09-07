@@ -8,7 +8,7 @@ import cv2
 import warnings
 warnings.filterwarnings('ignore')
 
-baseDataset = "/Users/marcostexeira/Documents/codigoMorcegos/dataset/"
+baseDataset = "dataset/"
 positivePath = 'PositiveRandom/'
 allDataPath  = 'allPositiveData/'
 
@@ -37,64 +37,61 @@ def img2array(image):
 
     return np.array(vector)
 
-def parseData():
-    count=0
-    for idx, img in enumerate(os.listdir(positivePath)):
-        if img.find('.png') > 0:
-            #splitting name
-            validImg = img[1:]
-            if 'id' not in validImg:
-                if validImg.split('_')[0] == 'Carollia':
-                    classesName = validImg.split('_')[0] + ' '+ validImg.split('_')[1]
-                    audioName   = validImg.split('_')[2].split('M')[0] + ' M'+ validImg.split('I')[0].split('M')[-1]
-                    imgName     = 'c'+ validImg.split('_')[2].split('M')[0] + ' M'+ validImg.split('I')[0].split('M')[-1]
-                elif not validImg.split('_')[0] == 'Stenodermatinae':
-                    classesName = validImg.split('_')[0] + ' '+ validImg.split('_')[1]
-                    audioName   = validImg.split('_')[2] + ' '+ validImg.split('I')[0].split('_')[-1]
-                    if len(validImg.split('_'))>3:
-                        imgName     = 'c'+ validImg.split('_')[2] + ' '+ validImg.split('_')[3]
-                else:
-                    classesName = validImg.split('_')[0]
-                    audioName   = validImg.split('_')[1] + ' '+ validImg.split('I')[0].split('_')[-1]
-                    imgName     = 'c'+ validImg.split('_')[1] + ' '+ validImg.split('_')[2]
-                
-                if not classesName in classesNames.keys() and os.path.isfile(baseDataset + classesName+'/'+audioName+'/Spec/Crop/'+imgName):
-                    if count > 0:
-                        classCounter.append(c_C)
-                    classesNames[classesName] = count
-                    #c_C=0
-                    count+=1
+def parseData(isImage=True):
+    count = 0
+    for idx, val in enumerate(os.listdir(baseDataset)):
+        if idx > 0:
+            print(idx)
+            if not val in classesNames.keys():
+                classesNames[val] = count
+                count += 1
 
-                if os.path.isfile(baseDataset + classesName+'/'+audioName+'/Spec/Crop/'+imgName):   
-                    if not classesNames[classesName] in X.keys():
-                        X[classesNames[classesName]] = positivePath + img
-                    else:
-                        X[classesNames[classesName]] = X[classesNames[classesName]] + ',' + positivePath + img
-                    
+            for idx_, img_folder in enumerate(os.listdir(baseDataset + val)):
+                if idx_ > 0 and os.path.isdir(baseDataset + val + '/' + img_folder):
+                    for marker, audio in enumerate(os.listdir(baseDataset + val + '/' + img_folder)):
+                        if os.stat(baseDataset + val + '/' + img_folder +'/'+ audio).st_size==0:
+                            continue
 
-    X_=[]
-    y_=[]
-    
+                        if marker > 0 and audio.endswith('WAV') and isImage:
+                            if not classesNames[val] in X.keys():
+                                X[classesNames[val]] = baseDataset + val + '/' + img_folder + '/Spec/Crop/c' + audio.replace('WAV','png')
+                            else:
+                                X[classesNames[val]] = X[classesNames[
+                                        val]] + ',' + baseDataset + val + '/' + img_folder + '/Spec/Crop/c' + audio.replace('WAV','png')
+                        elif marker > 0 and audio.endswith('WAV') and not isImage:
+                            if not classesNames[val] in X.keys():
+                                X[classesNames[val]] = baseDataset + val + '/' + img_folder +'/'+ audio
+                            else:
+                                X[classesNames[val]] = X[classesNames[
+                                        val]] + ',' + baseDataset + val + '/' + img_folder +'/'+ audio
+
+    X_ = []
+    y_ = []
+
     realClass = 0
     for classVal in range(len(classesNames)):
-        arquivos = X[classVal].split(',')
-        
-        if len(arquivos) > 12:
-            #print(X[classVal].split(','))
-            #print(len(arquivos))
-            #print("\n\n")
+        if classVal in X.keys():
+            arquivos = X[classVal].split(',')
+
+            print("accepting : ", classVal)
             for val in arquivos:
-                img_ = cv2.imread(val)
-                img_ = img2array(img_)
-                img_ = img_.astype('float32')
+                if (isImage):
+                    img_ = cv2.imread(val)
+                    img_ = img2array(img_)
 
-                X_.append(img_)
-                y_.append(realClass)
-            realClass+=1
-    X_      = np.array(X_)
-    y_      = np.array(y_)
+                    img_ = img_.astype('float32')
 
-    return X_,y_
+                    X_.append(img_)
+                    y_.append(realClass)
+                else:
+                    X_.append(featureExtractor(val))
+                    y_.append(realClass)
+            realClass += 1
+
+    X_ = np.array(X_)
+    y_ = np.array(y_)
+
+    return X_, y_
 
 
 def readAllAudioData():
@@ -132,10 +129,8 @@ def readAllAudioData():
                 print("accepting : ", classVal)
                 for idx,val in enumerate(arquivos):
                     img_ = cv2.imread(arquivos_images[idx])
-                    img_ = img2array(img_)
 
-                    #pred = clf.predict(img_)
-                    #if pred == [1]:
+
                     X_.append(featureExtractor(val))
                     y_.append(realClass)
                 realClass+=1

@@ -8,11 +8,12 @@ from random import shuffle
 import warnings
 
 warnings.filterwarnings('ignore')
-from reader import readAllAudioData, featureExtractor
+from reader import parseData
 import time
 
 #clf = joblib.load('model_classifier_positive_negative.pkl') 
-X_, y_multiclass = readAllAudioData()
+#X_, y_multiclass = readAllAudioData()
+X_, y_multiclass = parseData(isImage=False)
 
 acc_vals	= []
 
