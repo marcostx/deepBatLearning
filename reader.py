@@ -41,7 +41,6 @@ def parseData(isImage=True):
     count = 0
     for idx, val in enumerate(os.listdir(baseDataset)):
         if idx > 0:
-            print(idx)
             if not val in classesNames.keys():
                 classesNames[val] = count
                 count += 1
@@ -81,7 +80,8 @@ def parseData(isImage=True):
 
                     img_ = img_.astype('float32')
 
-                    X_.append(img_)
+
+                    X_.append(img_.reshape(1,56,92))
                     y_.append(realClass)
                 else:
                     X_.append(featureExtractor(val))
