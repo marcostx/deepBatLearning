@@ -48,7 +48,7 @@ def batch_creator(batch_size, dataset_length, y):
 # Parameters
 learning_rate = 0.004
 training_iters = 60
-batch_size = 20
+batch_size = 50
 display_step = 10
 
 # Network Parameters

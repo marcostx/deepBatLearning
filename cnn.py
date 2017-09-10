@@ -14,6 +14,10 @@ from sklearn.model_selection import train_test_split
 from keras.utils import np_utils
 from keras import backend as K
 from keras.optimizers import Adadelta
+from sklearn.model_selection import StratifiedKFold
+import time
+from random import shuffle
+from sklearn.metrics import accuracy_score,precision_score,recall_score,f1_score
 K.set_image_dim_ordering('th')
 
 from reader import parseData
@@ -32,49 +36,75 @@ def createCNNModel(num_classes):
     model.add(Dropout(0.5))
     model.add(Dense(num_classes, activation='softmax'))
     # Compile model
-    epochs = 50  # >>> should be 25+
-    lrate = 0.01
+    epochs = 100  # >>> should be 25+
+    lrate = 0.001
     decay = lrate/epochs
     sgd = SGD(lr=lrate, momentum=0.9, decay=decay, nesterov=False)
     model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy'])
-    print(model.summary())
+    #print(model.summary())
     return model, epochs
 
 
 X,y = parseData(isImage=True)
 
-def cross_validate(Xs, ys):
-    X_train, X_test, y_train, y_test = train_test_split(
-            Xs, ys, test_size=0.2, random_state=0)
-    return X_train, X_test, y_train, y_test
+precisions,accuracies,recalls,f1s = [],[],[],[]
 
-X_train, X_test, y_train, y_test = cross_validate(X, y)
+skf = StratifiedKFold(n_splits=10, shuffle=True)
+print("Training")
+counter=0
+start = time.time()
+for train_index, test_index in skf.split(X, y):
+	print("Fold : ",counter)
+	shuffle(train_index)
+	shuffle(test_index)
 
-# normalize inputs from 0-255 and 0.0-1.0
-X_train = np.array(X_train).astype('float32')
-X_test = np.array(X_test).astype('float32')
-X_train = X_train / 255.0
-X_test = X_test / 255.0
-
-# one hot encode outputs
-y_train = np.array(y_train)
-y_test = np.array(y_test)
-y_train = np_utils.to_categorical(y_train)
-y_test = np_utils.to_categorical(y_test)
-num_classes = y_test.shape[1]
-print("Data normalized and hot encoded.")
+	X_train, X_test = X[train_index], X[test_index]
+	y_train, y_test = y[train_index], y[test_index]
 
 
-# create our CNN model
-model, epochs = createCNNModel(num_classes)
-print("CNN Model created.")
-# fit and run our model
-seed = 7
-np.random.seed(seed)
-model.fit(X_train, y_train, validation_data=(X_test, y_test), nb_epoch=epochs, batch_size=64)
-# Final evaluation of the model
-scores = model.evaluate(X_test, y_test, verbose=0)
-print("Accuracy: %.2f%%" % (scores[1]*100))
+	# normalize inputs from 0-255 and 0.0-1.0
+	X_train = np.array(X_train).astype('float32')
+	X_test = np.array(X_test).astype('float32')
+	X_train = X_train / 255.0
+	X_test = X_test / 255.0
 
-print("done")
+	# one hot encode outputs
+	y_train = np.array(y_train)
+	y_test = np.array(y_test)
+	y_train = np_utils.to_categorical(y_train)
+	y_test = np_utils.to_categorical(y_test)
+	num_classes = y_test.shape[1]
+
+	# create our CNN model
+	model, epochs = createCNNModel(num_classes)
+	print("CNN Model created.")
+	# fit and run our model
+	seed = 7
+	np.random.seed(seed)
+	model.fit(X_train, y_train, validation_data=(X_test, y_test), nb_epoch=epochs, batch_size=50)
+	# Final evaluation of the model
+	pred = model.predict(X_test, verbose=0)
+	pred = [np.argmax(item) for item in pred]
+	y_test = y[test_index]
+
+	accuracies.append(accuracy_score(y_test, pred))
+	precisions.append(precision_score(y_test, pred, average='weighted'))
+	recalls.append(recall_score(y_test, pred, average='weighted'))
+	f1s.append(f1_score(y_test, pred, average='weighted'))
+	print("accuracy : ", accuracy_score(y_test, pred ) )
+	print("precision : ", precision_score(y_test, pred, average='weighted' ) )
+	print("recall : ", recall_score(y_test, pred,average='weighted' ) )
+	print("f1 : ", f1_score(y_test, pred,average='weighted' ) )
+	print("\n")
+	counter+=1
+
+print("Done.")
+
+print("accuracy avg : ", np.mean(accuracies) )
+print("precision avg : ", np.mean(precisions) )
+print("recall avg : ", np.mean(recalls) )
+print("f1 avg : ", np.mean(f1s) )
+
+print("it took", time.time() - start, "seconds.")
+
 
