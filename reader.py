@@ -40,35 +40,35 @@ def img2array(image):
 def parseData(isImage=True):
     count = 0
     for idx, val in enumerate(os.listdir(baseDataset)):
-        if idx > 0:
-            if not val in classesNames.keys():
-                classesNames[val] = count
-                count += 1
+        if not val in classesNames.keys():
+            classesNames[val] = count
+            count += 1
 
-            for idx_, img_folder in enumerate(os.listdir(baseDataset + val)):
-                if idx_ > 0 and os.path.isdir(baseDataset + val + '/' + img_folder):
-                    for marker, audio in enumerate(os.listdir(baseDataset + val + '/' + img_folder)):
-                        if os.stat(baseDataset + val + '/' + img_folder +'/'+ audio).st_size==0:
-                            continue
+        for idx_, img_folder in enumerate(os.listdir(baseDataset + val)):
+            if idx_ > 0 and os.path.isdir(baseDataset + val + '/' + img_folder):
+                for marker, audio in enumerate(os.listdir(baseDataset + val + '/' + img_folder)):
+                    if os.stat(baseDataset + val + '/' + img_folder +'/'+ audio).st_size==0:
+                        continue
 
-                        if marker > 0 and audio.endswith('WAV') and isImage:
-                            if not classesNames[val] in X.keys():
-                                X[classesNames[val]] = baseDataset + val + '/' + img_folder + '/Spec/Crop/c' + audio.replace('WAV','png')
-                            else:
-                                X[classesNames[val]] = X[classesNames[
-                                        val]] + ',' + baseDataset + val + '/' + img_folder + '/Spec/Crop/c' + audio.replace('WAV','png')
-                        elif marker > 0 and audio.endswith('WAV') and not isImage:
-                            if not classesNames[val] in X.keys():
-                                X[classesNames[val]] = baseDataset + val + '/' + img_folder +'/'+ audio
-                            else:
-                                X[classesNames[val]] = X[classesNames[
-                                        val]] + ',' + baseDataset + val + '/' + img_folder +'/'+ audio
+                    if marker > 0 and audio.endswith('WAV') and isImage:
+                        if not classesNames[val] in X.keys():
+                            X[classesNames[val]] = baseDataset + val + '/' + img_folder + '/Spec/Crop/c' + audio.replace('WAV','png')
+                        else:
+                            X[classesNames[val]] = X[classesNames[
+                                    val]] + ',' + baseDataset + val + '/' + img_folder + '/Spec/Crop/c' + audio.replace('WAV','png')
+                    elif marker > 0 and audio.endswith('WAV') and not isImage:
+                        if not classesNames[val] in X.keys():
+                            X[classesNames[val]] = baseDataset + val + '/' + img_folder +'/'+ audio
+                        else:
+                            X[classesNames[val]] = X[classesNames[
+                                    val]] + ',' + baseDataset + val + '/' + img_folder +'/'+ audio
 
     X_ = []
     y_ = []
+    sorted_classesNames= sorted(classesNames.items(), key=operator.itemgetter(0))
 
     realClass = 0
-    for classVal in range(len(classesNames)):
+    for classVal in range(len(sorted_classesNames)):
         if classVal in X.keys():
             arquivos = X[classVal].split(',')
 
@@ -76,12 +76,12 @@ def parseData(isImage=True):
             for val in arquivos:
                 if (isImage):
                     img_ = cv2.imread(val)
-                    img_ = img2array(img_)
+                    #img_ = img2array(img_)
 
-                    img_ = img_.astype('float32')
+                    #img_ = img_.astype('float32')
 
 
-                    X_.append(img_.reshape(1,56,92))
+                    X_.append(img_)
                     y_.append(realClass)
                 else:
                     X_.append(featureExtractor(val))

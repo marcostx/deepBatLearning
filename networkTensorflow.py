@@ -4,7 +4,7 @@ import tensorflow as tf
 from random import shuffle
 import numpy as np
 from reader import parseData
-
+import time
 
 seed = 128
 rng = np.random.RandomState(seed)
@@ -16,7 +16,7 @@ mean_metrics = []
 #clf = joblib.load('model_classifier_positive_negative.pkl') 
 X_, y_= parseData(isImage=True)
 
-def dense_to_one_hot(labels_dense, num_classes=9):
+def dense_to_one_hot(labels_dense, num_classes=10):
     """Convert class labels from scalars to one-hot vectors"""
     num_labels = labels_dense.shape[0]
     labels_one_hot = np.zeros((num_labels, num_classes))
@@ -46,16 +46,16 @@ def batch_creator(batch_size, dataset_length, y):
 ### set all variables
 
 # Parameters
-learning_rate = 0.001
-training_iters = 100
-batch_size = 50
+learning_rate = 0.004
+training_iters = 60
+batch_size = 20
 display_step = 10
 
 # Network Parameters
-n_input = 56*92 # MNIST data input (img shape: 28*28)
-n_classes = 9 # MNIST total classes (0-9 digits)
+n_input = 56*92 # 
+n_classes = 10 # 
 dropout = 0.75 # Dropout, probability to keep units
-epochs=110
+epochs=60
 
 # tf Graph input
 x = tf.placeholder(tf.float32, [None, n_input])
@@ -143,6 +143,9 @@ saver = tf.train.Saver()
 
 skf = StratifiedKFold(n_splits=10, shuffle=True)
 number = 0
+precisions,accuracies,recalls,f1s = [],[],[],[]
+
+start = time.time()
 for train_index, test_index in skf.split(X_, y_):
     shuffle(test_index)
     shuffle(train_index)
@@ -183,8 +186,10 @@ for train_index, test_index in skf.split(X_, y_):
         predict = tf.argmax(pred, 1)
         predictions = predict.eval({x: X_test.reshape(-1, n_input), keep_prob: 1.})
         
-        mean_metrics.append((accuracy_score(y_test,predictions)+ precision_score(y_test,predictions, average='weighted')+ 
-            recall_score(y_test,predictions, average='weighted')+ f1_score(y_test,predictions, average='weighted'))/4)
+        accuracies.append(accuracy_score(y_test, predictions))
+        precisions.append(precision_score(y_test, predictions, average='weighted'))
+        recalls.append(recall_score(y_test, predictions, average='weighted'))
+        f1s.append(f1_score(y_test, predictions, average='weighted'))
         print("accuracy : ", accuracy_score(y_test, predictions ) )
         print("precision : ", precision_score(y_test, predictions, average='weighted' ) )
         print("recall : ", recall_score(y_test, predictions,average='weighted' ) )
@@ -193,4 +198,9 @@ for train_index, test_index in skf.split(X_, y_):
     
     number+=1
 
-print(np.argmax(mean_metrics))  
+print("accuracy avg : ", np.mean(accuracies) )
+print("precision avg : ", np.mean(precisions) )
+print("recall avg : ", np.mean(recalls) )
+print("f1 avg : ", np.mean(f1s) )
+
+print("it took", time.time() - start, "seconds.")
