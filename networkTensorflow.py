@@ -16,7 +16,7 @@ mean_metrics = []
 #clf = joblib.load('model_classifier_positive_negative.pkl') 
 X_, y_= parseData(isImage=True)
 
-def dense_to_one_hot(labels_dense, num_classes=10):
+def dense_to_one_hot(labels_dense, num_classes=9):
     """Convert class labels from scalars to one-hot vectors"""
     num_labels = labels_dense.shape[0]
     labels_one_hot = np.zeros((num_labels, num_classes))
@@ -46,16 +46,16 @@ def batch_creator(batch_size, dataset_length, y):
 ### set all variables
 
 # Parameters
-learning_rate = 0.004
+learning_rate = 0.001
 training_iters = 60
 batch_size = 50
 display_step = 10
 
 # Network Parameters
 n_input = 56*92 # 
-n_classes = 10 # 
+n_classes = 9 # 
 dropout = 0.75 # Dropout, probability to keep units
-epochs=60
+epochs=150
 
 # tf Graph input
 x = tf.placeholder(tf.float32, [None, n_input])

@@ -10,7 +10,7 @@ seed = 128
 rng = np.random.RandomState(seed)
 
 #clf = joblib.load('model_classifier_positive_negative.pkl') 
-X_, y_= parseData(isImage=True)
+X_, y_= parseData(isImage=False)
 
 def dense_to_one_hot(labels_dense, num_classes=9):
     """Convert class labels from scalars to one-hot vectors"""
@@ -43,9 +43,10 @@ def batch_creator(batch_size, dataset_length, y):
 ### set all variables
 
 # number of neurons in each layer
-input_num_units = 56*92
+#input_num_units = 56*92
+input_num_units = 34
 n_hidden_1 = 256 # 1st layer number of features
-n_hidden_2 = 256 # 2nd layer number of features
+#n_hidden_2 = 128 # 2nd layer number of features
 output_num_units = 9
 
 # define placeholders
@@ -53,7 +54,7 @@ x = tf.placeholder(tf.float32, [None, input_num_units])
 y = tf.placeholder(tf.float32, [None, output_num_units])
 
 # set remaining variables
-epochs = 100
+epochs = 300
 batch_size = 50
 learning_rate = 0.001
 
@@ -63,21 +64,21 @@ def multilayer_perceptron(x, weights, biases):
     layer_1 = tf.add(tf.matmul(x, weights['h1']), biases['b1'])
     layer_1 = tf.nn.relu(layer_1)
     # Hidden layer with RELU activation
-    layer_2 = tf.add(tf.matmul(layer_1, weights['h2']), biases['b2'])
-    layer_2 = tf.nn.relu(layer_2)
+    #layer_2 = tf.add(tf.matmul(layer_1, weights['h2']), biases['b2'])
+    #layer_2 = tf.nn.relu(layer_2)
     # Output layer with linear activation
-    out_layer = tf.matmul(layer_2, weights['out']) + biases['out']
+    out_layer = tf.matmul(layer_1, weights['out']) + biases['out']
     return out_layer
 
 # Store layers weight & bias
 weights = {
     'h1': tf.Variable(tf.random_normal([input_num_units, n_hidden_1])),
-    'h2': tf.Variable(tf.random_normal([n_hidden_1, n_hidden_2])),
-    'out': tf.Variable(tf.random_normal([n_hidden_2, output_num_units]))
+    #'h2': tf.Variable(tf.random_normal([n_hidden_1, n_hidden_2])),
+    'out': tf.Variable(tf.random_normal([n_hidden_1, output_num_units]))
 }
 biases = {
     'b1': tf.Variable(tf.random_normal([n_hidden_1])),
-    'b2': tf.Variable(tf.random_normal([n_hidden_2])),
+    #'b2': tf.Variable(tf.random_normal([n_hidden_2])),
     'out': tf.Variable(tf.random_normal([output_num_units]))
 }
 
@@ -91,6 +92,7 @@ optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
 # Initializing the variables
 init = tf.global_variables_initializer()
 
+precisions,accuracies,recalls,f1s = [],[],[],[]
 skf = StratifiedKFold(n_splits=10, shuffle=True)
 number = 0
 start = time.time()
@@ -117,7 +119,7 @@ for train_index, test_index in skf.split(X_, y_):
                 
                 avg_cost += c / total_batch
                 
-            #print "Epoch:", (epoch+1), "cost =", "{:.10f}".format(avg_cost)
+            print "Epoch:", (epoch+1), "cost =", "{:.10f}".format(avg_cost)
         
         print "\nTraining complete!"
     
@@ -126,6 +128,10 @@ for train_index, test_index in skf.split(X_, y_):
         predict = tf.argmax(pred, 1)
         predictions = predict.eval({x: X_test.reshape(-1, input_num_units)})
         
+        accuracies.append(accuracy_score(y_test, predictions))
+        precisions.append(precision_score(y_test, predictions, average='weighted'))
+        recalls.append(recall_score(y_test, predictions, average='weighted'))
+        f1s.append(f1_score(y_test, predictions, average='weighted'))
         print("accuracy : ", accuracy_score(y_test, predictions ) )
         print("precision : ", precision_score(y_test, predictions, average='weighted' ) )
         print("recall : ", recall_score(y_test, predictions,average='weighted' ) )
@@ -133,5 +139,10 @@ for train_index, test_index in skf.split(X_, y_):
         print("\n")
     
     number+=1
+
+print("accuracy avg : ", np.mean(accuracies) )
+print("precision avg : ", np.mean(precisions) )
+print("recall avg : ", np.mean(recalls) )
+print("f1 avg : ", np.mean(f1s) )
 
 print("it took", time.time() - start, "seconds.")

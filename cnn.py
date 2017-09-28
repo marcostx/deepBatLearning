@@ -13,9 +13,10 @@ from matplotlib import pyplot as plt
 from sklearn.model_selection import train_test_split
 from keras.utils import np_utils
 from keras import backend as K
-from keras.optimizers import Adadelta
+from keras.optimizers import Adam
 from sklearn.model_selection import StratifiedKFold
 import time
+import keras
 from random import shuffle
 from sklearn.metrics import accuracy_score,precision_score,recall_score,f1_score
 K.set_image_dim_ordering('th')
@@ -28,7 +29,6 @@ def createCNNModel(num_classes):
     # Create the model
     model = Sequential()
     model.add(Convolution2D(32, 3, 3, input_shape=(92, 56, 3), border_mode='same', activation='relu', W_constraint=maxnorm(3)))
-    model.add(Dropout(0.2))
     model.add(Convolution2D(32, 3, 3, activation='relu', border_mode='same', W_constraint=maxnorm(3)))
     model.add(MaxPooling2D(pool_size=(2, 2)))
     model.add(Flatten())
@@ -36,10 +36,10 @@ def createCNNModel(num_classes):
     model.add(Dropout(0.5))
     model.add(Dense(num_classes, activation='softmax'))
     # Compile model
-    epochs = 100  # >>> should be 25+
-    lrate = 0.001
+    epochs = 120
+    lrate = 0.004
     decay = lrate/epochs
-    sgd = SGD(lr=lrate, momentum=0.9, decay=decay, nesterov=False)
+    sgd = Adam(lr=lrate, epsilon=1e-08, decay=decay)
     model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy'])
     #print(model.summary())
     return model, epochs
@@ -55,8 +55,6 @@ counter=0
 start = time.time()
 for train_index, test_index in skf.split(X, y):
 	print("Fold : ",counter)
-	shuffle(train_index)
-	shuffle(test_index)
 
 	X_train, X_test = X[train_index], X[test_index]
 	y_train, y_test = y[train_index], y[test_index]
@@ -96,6 +94,12 @@ for train_index, test_index in skf.split(X, y):
 	print("recall : ", recall_score(y_test, pred,average='weighted' ) )
 	print("f1 : ", f1_score(y_test, pred,average='weighted' ) )
 	print("\n")
+
+	text_file = open('output.txt','a')
+	txt ="accuracy : " + str(accuracy_score(y_test, pred ))  + "\n" + "precision : " + str(precision_score(y_test, pred, average='weighted' ))  + "\n " + "recall : " + str(recall_score(y_test, pred,average='weighted' ))  + ' \n ' +  "f1 : " + str(f1_score(y_test, pred,average='weighted' ))  + ' \n\n '
+	
+	text_file.write(txt)
+	text_file.close()
 	counter+=1
 
 print("Done.")
@@ -104,7 +108,5 @@ print("accuracy avg : ", np.mean(accuracies) )
 print("precision avg : ", np.mean(precisions) )
 print("recall avg : ", np.mean(recalls) )
 print("f1 avg : ", np.mean(f1s) )
-
-print("it took", time.time() - start, "seconds.")
 
 

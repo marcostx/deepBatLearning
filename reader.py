@@ -80,7 +80,6 @@ def parseData(isImage=True):
 
                     #img_ = img_.astype('float32')
 
-
                     X_.append(img_)
                     y_.append(realClass)
                 else:
